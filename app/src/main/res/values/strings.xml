@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Pult - TV controller</string>
+    <string name="messages_list_header">Received messages</string>
+</resources>
