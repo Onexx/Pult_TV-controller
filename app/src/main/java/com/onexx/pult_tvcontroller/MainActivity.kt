@@ -9,13 +9,13 @@ import android.content.Intent
 import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.Toast
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import kotlinx.android.synthetic.main.activity_main.*
-
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -107,6 +107,15 @@ class MainActivity : AppCompatActivity() {
             return null
         }
 
+
+
+
+        var mHandler: Runnable = Runnable {
+            messages.text = data.toString()
+        }
+
+
+        var data = 0
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             progress.dismiss()
@@ -124,9 +133,9 @@ class MainActivity : AppCompatActivity() {
                             socket!!.close()
                             break
                         }
-                        //Set text to text view
-                        messages.text = "$bytes"//todo BUG:updates only after end of function
-                        //todo BUG:toast shows only after end of function
+
+                        Handler().post(mHandler)
+                        data = bytes
                         Toast.makeText(context, "$bytes", Toast.LENGTH_LONG).show()
                         Log.i("TV_controller", "Received message: $bytes")
                     } catch (e: IOException) {
