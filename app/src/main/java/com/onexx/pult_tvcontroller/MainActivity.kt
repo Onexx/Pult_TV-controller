@@ -16,6 +16,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import kotlinx.android.synthetic.main.activity_main.*
+import android.os.Looper
+
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -25,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         var serverSocket: BluetoothServerSocket? = null
         var socket: BluetoothSocket? = null
         var inStream: InputStream? = null
-        lateinit var progress: ProgressDialog
+       // lateinit var progress: ProgressDialog
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,12 +52,29 @@ class MainActivity : AppCompatActivity() {
             Log.i("TV_controller", "Bluetooth enabled")
         }
         //todo add button 'server start' otherwise app will crash if bluetooth is disabled
+
+
+        Thread {
+            while(true) {
+                messages.post { messages.text = MesData }
+                imageView.post{
+                    if(MesData== "0") imageView.setImageResource(R.mipmap.Red_foreground)
+                    if(MesData == "1") imageView.setImageResource(R.mipmap.Green_foreground)
+                }
+                //messages.post(MesData)
+                Thread.sleep(100)
+                Log.i("Tv C","I in while:" + MesData)
+            }
+        }.start()
     }
+
 
     override fun onResume() {
         super.onResume()
         Log.i("TV_controller", "On resume")
         messages.text = "="
+        Thread{
+
         try {
             serverSocket =
                 m_bluetoothAdapter!!.listenUsingInsecureRfcommWithServiceRecord(
@@ -70,8 +89,10 @@ class MainActivity : AppCompatActivity() {
         SearchIncomeConnections(this).execute()
 
         Log.i("TV_controller", "Search finished")
-    }
+        }.start()
 
+    }
+    var MesData ="NULL"
     inner class SearchIncomeConnections(c: Context) : AsyncTask<Void, Void, String>() {
 
         private val context: Context
@@ -82,7 +103,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPreExecute() {
             super.onPreExecute()
-            progress = ProgressDialog.show(context, "Waiting for connection...", "Please wait")
+           // progress = ProgressDialog.show(context, "Waiting for connection...", "Please wait")
             Log.i("TV_controller", "showing progress")
         }
 
@@ -106,44 +127,34 @@ class MainActivity : AppCompatActivity() {
             Log.i("TV_controller", "Connected")
             return null
         }
-
-
-
-
-        var mHandler: Runnable = Runnable {
-            messages.text = data.toString()
-        }
-
-
-        var data = 0
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
-            progress.dismiss()
-            inStream = socket!!.inputStream
-            while (socket!!.isConnected) {
-                var bytes: Int
-                // Keep listening to the InputStream
-                Log.i("TV_controller", "Reading input stream...")
-                while (inStream != null && socket!!.isConnected) {
-                    try {
-                        // Read from the InputStream
-                        bytes = inStream!!.read()
-                        bytes -= '0'.toInt()
-                        if (bytes == -1) {
-                            socket!!.close()
-                            break
+            //progress.dismiss()
+            Thread {
+                inStream = socket!!.inputStream
+                while (socket!!.isConnected) {
+                    var bytes: Int
+                    // Keep listening to the InputStream
+                    Log.i("TV_controller", "Reading input stream...")
+                    while (inStream != null && socket!!.isConnected) {
+                        try {
+                            // Read from the InputStream
+                            bytes = inStream!!.read()
+                            bytes -= '0'.toInt()
+                            if (bytes == -1) {
+                                socket!!.close()
+                                break
+                            }
+                            MesData = "$bytes";
+                           // Toast.makeText(context, "$bytes", Toast.LENGTH_LONG).show()
+                            Log.i("TV_controller", "Received message: $bytes")
+                        } catch (e: IOException) {
                         }
-
-                        Handler().post(mHandler)
-                        data = bytes
-                        Toast.makeText(context, "$bytes", Toast.LENGTH_LONG).show()
-                        Log.i("TV_controller", "Received message: $bytes")
-                    } catch (e: IOException) {
                     }
+                    Log.i("TV_controller", "finished")
                 }
-                Log.i("TV_controller", "finished")
-            }
-            Log.i("TV_controller", "Socket closed")
+                Log.i("TV_controller", "Socket closed")
+            }.start()
         }
 
     }
