@@ -58,8 +58,8 @@ class MainActivity : AppCompatActivity() {
             while(true) {
                 messages.post { messages.text = MesData }
                 imageView.post{
-                    if(MesData== "0") imageView.setImageResource(R.mipmap.Red_foreground)
-                    if(MesData == "1") imageView.setImageResource(R.mipmap.Green_foreground)
+                    if(MesData== "0") imageView.setImageResource(R.mipmap.red_foreground)
+                    if(MesData == "1") imageView.setImageResource(R.mipmap.green_foreground)
                 }
                 //messages.post(MesData)
                 Thread.sleep(100)
